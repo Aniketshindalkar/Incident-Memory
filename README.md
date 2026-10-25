@@ -1,4 +1,4 @@
-<img width="852" height="620" alt="image" src="https://github.com/user-attachments/assets/10d1a479-1f8c-494f-b81c-f0a48b7331bb" /># Incident-Memory
+# Incident-Memory
 A searchable memory for ops and engineering teams. Log an incident's symptoms and instantly see past incidents that match, with the exact reasons why, plus what fixed them and how long they took.
 
 Built solo for the Appwrite Databases Hackathon (October 2026), on Appwrite TablesDB.
