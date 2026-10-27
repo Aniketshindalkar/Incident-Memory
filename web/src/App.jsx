@@ -4,6 +4,14 @@ import { client, tablesDB, ensureSession, DATABASE_ID, TABLES } from "./config";
 
 const SEVERITIES = ["low", "medium", "high", "critical"];
 
+function ago(date) {
+  const mins = Math.max(0, Math.round((Date.now() - new Date(date)) / 60000));
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins} min ago`;
+  if (mins < 1440) return `${Math.round(mins / 60)} h ago`;
+  return `${Math.round(mins / 1440)} d ago`;
+}
+
 function IncidentExtras({ incident, fixes, busy, onAdd, onResolve }) {
   const [note, setNote] = useState("");
   const [type, setType] = useState("update");
@@ -235,8 +243,19 @@ export default function App() {
 
   return (
     <main className="page">
-      <h1>Incident Memory</h1>
-      <p className="sub">Log an incident, and see past ones like it.</p>
+      <header className="hero">
+        <h1>Incident Memory</h1>
+        <p className="sub">
+          Stop solving the same outage twice. Pick the symptoms you are seeing and get
+          past incidents that match, with the fix that worked.
+        </p>
+        <div className="pills">
+          <span className="pill"><i className="dot" /> Live updates</span>
+          <span className="pill">Built on Appwrite TablesDB</span>
+        </div>
+      </header>
+      <div className="layout">
+      <aside className="side">
 
       <form className="card form" onSubmit={submit}>
         <h2>Report a new incident</h2>
@@ -255,7 +274,7 @@ export default function App() {
             {services.map((s) => <option key={s.$id} value={s.$id}>{s.name}</option>)}
           </select>
         </div>
-        <p className="meta">Symptoms you are seeing:</p>
+        <p className="meta">Pick the symptoms you are seeing. Matches appear instantly:</p>
         <div className="chips">
           {symptoms.map((s) => (
             <button type="button" key={s.$id}
@@ -291,7 +310,9 @@ export default function App() {
         </button>
       </form>
 
-      {loading && <p>Loading...</p>}
+      </aside>
+      <section className="feed">
+      {loading && <p className="meta">Loading incidents...</p>}
       {error && <p className="error">{error}</p>}
 
       <form className="searchbar" onSubmit={runSearch}>
@@ -307,10 +328,10 @@ export default function App() {
 
       <ul className="list">
         {(results ?? incidents).map((i) => (
-          <li key={i.$id} className="card">
+          <li key={i.$id} className={`card sev-${i.severity}`}>
             <div className="row">
               <span className={`badge ${i.severity}`}>{i.severity}</span>
-              <span className="status">{i.status}</span>
+              <span className={`status s-${i.status}`}>{i.status}</span>
             </div>
             <h2>{i.title}</h2>
             <p>{i.summary}</p>
@@ -319,11 +340,17 @@ export default function App() {
             </div>
             <IncidentExtras incident={i} fixes={fixes} busy={busy} onAdd={addUpdate} onResolve={resolveIncident} />
             <p className="meta">
-              {i.services?.name ?? "unknown service"} · {new Date(i.started_at).toLocaleString()}
+              {i.services?.name ?? "unknown service"} · {ago(i.started_at)}
             </p>
           </li>
         ))}
       </ul>
+      </section>
+      </div>
+      <footer className="foot">
+        Built for the Appwrite Databases Hackathon. TablesDB features in use: relationships,
+        fulltext search, Realtime, and transactions.
+      </footer>
     </main>
   );
 }

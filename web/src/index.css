@@ -39,3 +39,33 @@ h1 { margin: 0; }
 .event { margin: 6px 0 6px 10px !important; border-left: 2px solid #2d3139; padding-left: 8px; }
 .actions { display: grid; gap: 6px; margin-top: 8px; }
 .actions select { background: #14161a; color: inherit; border: 1px solid #2d3139; border-radius: 8px; padding: 9px 10px; font: inherit; }
+
+/* ---- polish ---- */
+.page { max-width: 1120px; }
+.hero { padding: 12px 0 20px; }
+.hero h1 { font-size: 2.4rem; letter-spacing: -0.02em; background: linear-gradient(90deg, #fff, #8fb0ff); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.hero .sub { max-width: 640px; font-size: 1.05rem; line-height: 1.5; }
+.pills { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.pill { display: inline-flex; align-items: center; gap: 6px; font-size: 0.8rem; color: #c4c7cc; border: 1px solid #2d3139; border-radius: 999px; padding: 4px 12px; background: #1a1d22; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: #34d27b; box-shadow: 0 0 0 0 rgba(52,210,123,.6); animation: pulse 1.8s infinite; }
+@keyframes pulse { 70% { box-shadow: 0 0 0 7px rgba(52,210,123,0); } 100% { box-shadow: 0 0 0 0 rgba(52,210,123,0); } }
+.layout { display: grid; grid-template-columns: 390px 1fr; gap: 24px; align-items: start; }
+.side { position: sticky; top: 16px; max-height: calc(100vh - 32px); overflow-y: auto; }
+.side .form { margin: 0; }
+.feed { min-width: 0; }
+.feed .searchbar:first-of-type { margin-top: 0; }
+@media (max-width: 900px) { .layout { grid-template-columns: 1fr; } .side { position: static; max-height: none; } .hero h1 { font-size: 1.8rem; } }
+.card { transition: border-color .15s, transform .15s; border-left: 4px solid #3a3f47; }
+.card:hover { border-color: #3d4452; }
+.card.sev-critical { border-left-color: #d6334a; }
+.card.sev-high { border-left-color: #e08a1e; }
+.card.sev-medium { border-left-color: #cfb22a; }
+.card.sev-low { border-left-color: #3aa76d; }
+.status { padding: 2px 10px; border-radius: 999px; border: 1px solid #343944; }
+.status.s-open { color: #ff9b9b; border-color: #6b2b33; }
+.status.s-investigating { color: #ffd479; border-color: #6b5420; }
+.status.s-resolved { color: #7fe0a8; border-color: #1f5a3b; }
+.primary:hover:not(:disabled) { background: #3a66ee; }
+.chip:hover { border-color: #5b6679; }
+input:focus, textarea:focus, select:focus { outline: 2px solid #3a66ee; outline-offset: 1px; }
+.foot { margin-top: 32px; padding-top: 16px; border-top: 1px solid #2d3139; color: #9aa0a6; font-size: 0.82rem; text-align: center; }
