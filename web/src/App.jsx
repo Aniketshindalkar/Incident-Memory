@@ -1,8 +1,52 @@
 import { useEffect, useMemo, useState } from "react";
-import { ID, Query } from "appwrite";
-import { tablesDB, ensureSession, DATABASE_ID, TABLES } from "./config";
+import { Realtime, Channel, ID, Query } from "appwrite";
+import { client, tablesDB, ensureSession, DATABASE_ID, TABLES } from "./config";
 
 const SEVERITIES = ["low", "medium", "high", "critical"];
+
+function IncidentExtras({ incident, fixes, busy, onAdd, onResolve }) {
+  const [note, setNote] = useState("");
+  const [type, setType] = useState("update");
+  const [fixId, setFixId] = useState("");
+  const events = [...(incident.timeline_events ?? [])].sort(
+    (a, b) => new Date(a.occurred_at) - new Date(b.occurred_at)
+  );
+  const isOpen = incident.status !== "resolved";
+  return (
+    <>
+      <details className="timeline" open={isOpen}>
+        <summary>Timeline ({events.length})</summary>
+        {events.map((ev) => (
+          <p key={ev.$id} className="event">
+            <span className="meta">{new Date(ev.occurred_at).toLocaleTimeString()} · {ev.event_type}</span>
+            <br />
+            {ev.note}
+          </p>
+        ))}
+      </details>
+      {isOpen && (
+        <div className="actions">
+          <div className="searchbar">
+            <input placeholder="Add a timeline update..." value={note} onChange={(e) => setNote(e.target.value)} />
+            <select value={type} onChange={(e) => setType(e.target.value)}>
+              {["update", "action", "escalation"].map((t) => <option key={t}>{t}</option>)}
+            </select>
+            <button type="button" className="primary" disabled={busy || !note.trim()}
+              onClick={() => { onAdd(incident, note, type); setNote(""); }}>Add</button>
+          </div>
+          <div className="searchbar">
+            <select value={fixId} onChange={(e) => setFixId(e.target.value)}>
+              <option value="">Fix applied...</option>
+              {fixes.map((f) => <option key={f.$id} value={f.$id}>{f.title}</option>)}
+            </select>
+            <button type="button" className="primary" disabled={busy || !fixId}
+              onClick={() => onResolve(incident, fixId)}>Resolve incident</button>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
 
 export default function App() {
   const [incidents, setIncidents] = useState([]);
@@ -16,13 +60,15 @@ export default function App() {
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState("");
   const [results, setResults] = useState(null); // null = no search active
+  const [fixes, setFixes] = useState([]);
+  const [busy, setBusy] = useState(false);
 
   const list = (tableId, queries = []) =>
     tablesDB.listRows({ databaseId: DATABASE_ID, tableId, queries }).then((r) => r.rows);
 
   const loadIncidents = () =>
     list(TABLES.incidents, [
-      Query.select(["*", "services.*", "symptoms.*", "fixes.*"]),
+      Query.select(["*", "services.*", "symptoms.*", "fixes.*", "timeline_events.*"]),
       Query.orderDesc("started_at"),
       Query.limit(50),
     ]).then(setIncidents);
@@ -34,10 +80,33 @@ export default function App() {
           loadIncidents(),
           list(TABLES.services, [Query.orderAsc("name")]).then(setServices),
           list(TABLES.symptoms, [Query.orderAsc("label"), Query.limit(100)]).then(setSymptoms),
+          list(TABLES.fixes, [Query.orderAsc("title")]).then(setFixes),
         ])
       )
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
+  }, []);
+
+  // Task 6: Realtime. Any change to incidents or timeline events refreshes the list.
+  useEffect(() => {
+    let sub;
+    let stop = false;
+    ensureSession()
+      .then(() =>
+        new Realtime(client).subscribe(
+          [
+            Channel.tablesdb(DATABASE_ID).table(TABLES.timeline_events).row(),
+            Channel.tablesdb(DATABASE_ID).table(TABLES.incidents).row(),
+          ],
+          () => loadIncidents()
+        )
+      )
+      .then((s) => (stop ? s.close() : (sub = s)))
+      .catch((e) => console.error("Realtime failed", e));
+    return () => {
+      stop = true;
+      sub?.close();
+    };
   }, []);
 
   const toggle = (id) =>
@@ -62,13 +131,66 @@ export default function App() {
   const minutesToResolve = (i) =>
     Math.round((new Date(i.resolved_at) - new Date(i.started_at)) / 60000);
 
+  async function addUpdate(incident, note, type) {
+    if (!note.trim()) return;
+    setBusy(true);
+    try {
+      await tablesDB.createRow({
+        databaseId: DATABASE_ID,
+        tableId: TABLES.timeline_events,
+        rowId: ID.unique(),
+        data: { note: note.trim(), event_type: type, occurred_at: new Date().toISOString(), incidents: incident.$id },
+      });
+      await loadIncidents();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  // Task 7: one atomic transaction. Either everything below is saved, or nothing is.
+  async function resolveIncident(incident, fixId) {
+    setBusy(true);
+    setError("");
+    try {
+      const now = new Date().toISOString();
+      const fixTitle = fixes.find((f) => f.$id === fixId)?.title ?? "a fix";
+      const tx = await tablesDB.createTransaction();
+      await tablesDB.updateRow({
+        databaseId: DATABASE_ID,
+        tableId: TABLES.incidents,
+        rowId: incident.$id,
+        data: {
+          status: "resolved",
+          resolved_at: now,
+          fixes: [...new Set([...(incident.fixes ?? []).map((f) => f.$id), fixId])],
+        },
+        transactionId: tx.$id,
+      });
+      await tablesDB.createRow({
+        databaseId: DATABASE_ID,
+        tableId: TABLES.timeline_events,
+        rowId: ID.unique(),
+        data: { note: `Resolved. Fix applied: ${fixTitle}`, event_type: "resolution", occurred_at: now, incidents: incident.$id },
+        transactionId: tx.$id,
+      });
+      await tablesDB.updateTransaction({ transactionId: tx.$id, commit: true });
+      await loadIncidents();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function runSearch(e) {
     e.preventDefault();
     const q = search.trim();
     if (!q) return setResults(null);
     try {
       const rows = await list(TABLES.incidents, [
-        Query.select(["*", "services.*", "symptoms.*", "fixes.*"]),
+        Query.select(["*", "services.*", "symptoms.*", "fixes.*", "timeline_events.*"]),
         Query.or([Query.search("title", q), Query.search("summary", q)]),
         Query.orderDesc("started_at"),
         Query.limit(50),
@@ -195,6 +317,7 @@ export default function App() {
             <div className="chips">
               {(i.symptoms ?? []).map((s) => <span key={s.$id} className="chip static">{s.label}</span>)}
             </div>
+            <IncidentExtras incident={i} fixes={fixes} busy={busy} onAdd={addUpdate} onResolve={resolveIncident} />
             <p className="meta">
               {i.services?.name ?? "unknown service"} · {new Date(i.started_at).toLocaleString()}
             </p>

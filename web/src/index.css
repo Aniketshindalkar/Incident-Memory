@@ -34,3 +34,8 @@ h1 { margin: 0; }
 .searchbar { display: flex; gap: 8px; align-items: center; margin: 8px 0; }
 .searchbar input { flex: 1; background: #14161a; color: inherit; border: 1px solid #2d3139; border-radius: 8px; padding: 9px 10px; font: inherit; }
 .searchbar .primary { padding: 9px 16px; }
+.timeline { margin: 8px 0; font-size: 0.9rem; }
+.timeline summary { cursor: pointer; color: #8fb0ff; }
+.event { margin: 6px 0 6px 10px !important; border-left: 2px solid #2d3139; padding-left: 8px; }
+.actions { display: grid; gap: 6px; margin-top: 8px; }
+.actions select { background: #14161a; color: inherit; border: 1px solid #2d3139; border-radius: 8px; padding: 9px 10px; font: inherit; }

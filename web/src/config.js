@@ -10,7 +10,7 @@ export const TABLES = {
   timeline_events: "6ade3ac500251875dd2d",
 };
 
-const client = new Client()
+export const client = new Client()
   .setEndpoint("https://sgp.cloud.appwrite.io/v1")
   .setProject("6ade3375000416560f14");
 
