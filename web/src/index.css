@@ -1,0 +1,18 @@
+:root { color-scheme: dark; font-family: system-ui, sans-serif; }
+body { margin: 0; background: #14161a; color: #e8eaed; }
+.page { max-width: 760px; margin: 0 auto; padding: 32px 16px; }
+h1 { margin: 0; }
+.sub { color: #9aa0a6; margin-top: 4px; }
+.list { list-style: none; padding: 0; display: grid; gap: 12px; }
+.card { background: #1d2025; border: 1px solid #2d3139; border-radius: 10px; padding: 14px 16px; }
+.card h2 { font-size: 1.05rem; margin: 8px 0 4px; }
+.card p { margin: 4px 0; color: #c4c7cc; }
+.meta { font-size: 0.85rem; color: #9aa0a6 !important; }
+.row { display: flex; justify-content: space-between; align-items: center; }
+.status { font-size: 0.8rem; color: #9aa0a6; text-transform: capitalize; }
+.badge { font-size: 0.75rem; padding: 2px 8px; border-radius: 999px; text-transform: uppercase; background: #3a3f47; }
+.badge.critical { background: #8e1f2d; }
+.badge.high { background: #9a5b13; }
+.badge.medium { background: #7a6a14; }
+.badge.low { background: #2c5f3f; }
+.error { color: #ff8a8a; }
