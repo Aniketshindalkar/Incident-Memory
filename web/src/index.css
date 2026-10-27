@@ -16,3 +16,21 @@ h1 { margin: 0; }
 .badge.medium { background: #7a6a14; }
 .badge.low { background: #2c5f3f; }
 .error { color: #ff8a8a; }
+.form { display: grid; gap: 10px; margin: 16px 0; }
+.form input, .form textarea, .form select { background: #14161a; color: inherit; border: 1px solid #2d3139; border-radius: 8px; padding: 9px 10px; font: inherit; }
+.form textarea { min-height: 60px; resize: vertical; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; }
+.chip { background: #262a31; color: #c4c7cc; border: 1px solid #343944; border-radius: 999px; padding: 4px 10px; font-size: 0.8rem; cursor: pointer; }
+.chip.on { background: #1f4fd8; border-color: #1f4fd8; color: #fff; }
+.chip.static { cursor: default; }
+.primary { background: #1f4fd8; color: #fff; border: 0; border-radius: 8px; padding: 10px; font: inherit; cursor: pointer; }
+.primary:disabled { opacity: 0.6; }
+.matches { border: 1px solid #1f4fd8; border-radius: 10px; padding: 10px 14px; background: #171c2b; }
+.matches h3 { margin: 0 0 6px; font-size: 0.95rem; color: #8fb0ff; }
+.match { padding: 8px 0; border-top: 1px solid #2a3350; }
+.match:first-of-type { border-top: 0; }
+.match p { margin: 3px 0; }
+.searchbar { display: flex; gap: 8px; align-items: center; margin: 8px 0; }
+.searchbar input { flex: 1; background: #14161a; color: inherit; border: 1px solid #2d3139; border-radius: 8px; padding: 9px 10px; font: inherit; }
+.searchbar .primary { padding: 9px 16px; }
